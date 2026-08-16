@@ -1,0 +1,68 @@
+%dw 2.0
+import * from dw::core::Arrays
+output application/json  
+---
+payload.regions flatMap ((region) -> region.stores flatMap ((store) -> store.employees filter ((employee) -> not isEmpty(employee.skills)) flatMap ((employee) -> employee.skills map ((empSkill) -> {
+        employeeId: employee.id,
+        employeeName: employee.name,
+        skill: empSkill,
+        storeId: store.storeId,
+        region: region.regionName
+      }))))
+
+Sample_Input:
+{
+  "regions": [
+    {
+      "regionName": "West",
+      "stores": [
+        {
+          "storeId": "S1",
+          "employees": [
+            {
+              "id": 101,
+              "name": "John",
+              "skills": ["Java", "MuleSoft"]
+            },
+            {
+              "id": 102,
+              "name": "Sarah",
+              "skills": ["Salesforce"]
+            }
+          ]
+        },
+        {
+          "storeId": "S2",
+          "employees": [
+            {
+              "id": 103,
+              "name": "Mike",
+              "skills": ["MuleSoft", "AWS"]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "regionName": "East",
+      "stores": [
+        {
+          "storeId": "S3",
+          "employees": [
+            {
+              "id": 104,
+              "name": "Lisa",
+              "skills": ["Java", "AWS"]
+            },
+            {
+              "id": 105,
+              "name": "David",
+              "skills": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
