@@ -27,3 +27,45 @@ payload.customers flatMap ((customer) -> customer.orders filter ((order) -> orde
     tier: getTier(completedOrder.amount),
     region: getRegion(customer.country)
   }))
+
+
+---------------------
+
+
+%dw 2.0
+
+fun normalizeName(fn, ln) =
+  trim(trim(fn default "") ++ " " ++ trim(ln default ""))
+
+fun getDirection(transType) =
+  if (transType == "CREDIT")
+    "IN"
+  else if (transType == "DEBIT")
+    "OUT"
+  else
+    "N/A"
+
+fun calculateNet(tranArray) =
+  (sum((tranArray filter ((item) -> (item."type" == "CREDIT" and not isEmpty(item.amount)))).amount)) - (sum((tranArray filter ((item) -> (item."type" == "DEBIT" and not isEmpty(item.amount)))).amount))
+
+fun getStatus(netAmount) =
+  if (netAmount > 0)
+    "POSITIVE"
+  else if (netAmount < 0)
+    "NEGATIVE"
+  else
+    "ZERO"
+output application/json  
+---
+payload.accounts map ((account) -> {
+  accountId: account.accountId,
+  customerName: normalizeName(account.customer.firstName, account.customer.lastName),
+  accountType: account."type",
+  transactions: (account.transactions filter ((trans) -> (trans."type" == "CREDIT" or trans."type" == "DEBIT"))) map ((transaction) -> {
+    transactionId: transaction.id,
+    amount: transaction.amount,
+    direction: getDirection(transaction."type")
+  }),
+  netAmount: calculateNet(account.transactions),
+  status: getStatus(calculateNet(account.transactions))
+})
