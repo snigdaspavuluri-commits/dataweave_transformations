@@ -1,0 +1,29 @@
+%dw 2.0
+output application/json
+fun getFullName(fn, ln) =
+  trim(fn default "" ++ " " ++ ln default "")
+
+fun getTier(amount) =
+  if (amount >= 1000)
+    "PREMIUM"
+  else if (amount >= 500)
+    "STANDARD"
+  else
+    "BASIC"
+
+fun getRegion(region) =
+  if (region == "CA" or region == "US")
+    "NORTH_AMERICA"
+  else if (region == "IN")
+    "ASIA"
+  else
+    "OTHER"
+---
+payload.customers flatMap ((customer) -> customer.orders filter ((order) -> order.status == "COMPLETED") map ((completedOrder) -> {
+    customerId: customer.customerId,
+    customerName: getFullName(customer.firstName, customer.lastName),
+    orderId: completedOrder.orderId,
+    amount: completedOrder.amount,
+    tier: getTier(completedOrder.amount),
+    region: getRegion(customer.country)
+  }))
